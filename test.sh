@@ -12,5 +12,5 @@ ls -RAhlF $ROOT/vendor/install
 cd $ROOT
 
 mkdir -p $ROOT/build; cd $ROOT/build
-CXX=g++-6 cmake -DSFML_ROOT=$ROOT/vendor/install $ROOT
+CXX=g++-6 cmake -DSFML_ROOT=$ROOT/vendor/install/SFML $ROOT
 make VERBOSE=1
