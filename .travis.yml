@@ -1,0 +1,29 @@
+language: cpp
+dist: trusty
+script: bash -ex test.sh
+compiler:
+  - g++-6
+env:
+  - COMPILER=g++-6
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake
+      - cmake-data
+      - gcc-6
+      - g++-6
+      - freeglut3-dev
+      - libjpeg-dev
+      - libfreetype6-dev
+      - libxrandr-dev
+      - libx11-dev
+      - libx11-xcb-dev
+      - libxcb-image0-dev
+      - libxcb-randr0-dev
+      - libglew-dev
+      - libsndfile1-dev
+      - libopenal-dev
+      - libudev-dev
