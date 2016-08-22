@@ -13,14 +13,14 @@ GameManager::GameManager(): window_{sf::VideoMode(600,800), "DebugWindow"} {//wi
 
   window_.setVerticalSyncEnabled(true);
 
-  const int player_count = 1000;
+  const int player_count = 100;
   for(int i=0; i<player_count; i++) {
     int player = new_entity<Player>();
   }
 
   enable_system<Movement>();
   enable_system<Boundary>(window_.getSize());
-  enable_system<Collision>(window_.getSize(), 64);
+  enable_system<Collision>(window_.getSize(), 64); // The bin spacing must be at least equal to the largest sprite dimension
   enable_system<Renderer>(window_);
 }
 

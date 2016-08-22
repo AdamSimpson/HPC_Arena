@@ -1,8 +1,10 @@
 #pragma once
 
 #include "ECS_core/system.h"
+#include "ECS_core/entity.h"
 #include "ECS_core/entity_manager.h"
 #include "SFML/System/Vector2.hpp"
+#include "SFML/Graphics.hpp"
 
 class Collision: public ecs::System {
 public:
@@ -15,4 +17,6 @@ private:
                   std::vector<int>>> grid_;
 
   int bin_spacing_;
+
+  sf::IntRect entity_bounds(ecs::Entity& entity);
 };

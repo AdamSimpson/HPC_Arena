@@ -12,7 +12,7 @@ void Player::build(ecs::Entity& player) {
   player.add_component<Sprite>();
   player.add_component<CollisionBounds>();
 
-  player.component<Sprite>().filename = "../resources/tank.jpg";
+  player.component<Sprite>().filename = "resources/tank.jpg";
   player.component<Sprite>().size = sf::Vector2u{100, 60};
 
   player.component<CollisionBounds>().size = player.component<Sprite>().size;
