@@ -6,6 +6,7 @@
 #include <array>
 #include <bitset>
 #include <algorithm>
+#include <cassert>
 #include <experimental/tuple> // Required for std::apply
 #include "component_base.h"
 #include "component.h"
@@ -131,6 +132,10 @@ public:
   template<typename T>
   T& fetch_component(int entity_id) {
     const auto component_id = T::type_id();
+
+    // Must assert that the component is valid, else an invalid component_index may be returned
+    assert(component_masks_[entity_id].test(component_id));
+
     const auto component_index = component_indices_[entity_id][component_id];
     return *(static_cast<T*>(components_[component_id][component_index].get()));
   }

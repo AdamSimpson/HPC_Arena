@@ -7,7 +7,8 @@
 #include "Components/collision_bounds.h"
 #include "Components/health.h"
 
-void Player::build(ecs::Entity& player) {
+void Player::build(ecs::Entity& player,
+                   int x_center, int y_center) {
   player.add_component<Position>();
   player.add_component<Velocity>();
   player.add_component<Sprite>();
@@ -19,8 +20,8 @@ void Player::build(ecs::Entity& player) {
 
   player.component<CollisionBounds>().size = player.component<Sprite>().size;
 
-  player.component<Position>().x = 0.0;
-  player.component<Position>().y = 0.0;
+  player.component<Position>().x = x_center;
+  player.component<Position>().y = y_center;
 
   player.component<Velocity>().x = 10.0;
   player.component<Velocity>().y = 10.0;

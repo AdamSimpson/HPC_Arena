@@ -161,7 +161,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
     }
 
     // Loop over potential collisions
-    // Active(velocity component) entities only register twice (a hit b and b hit a)
+    // Active(velocity component) entities register twice (a hit b and b hit a)
 
     const sf::IntRect ent_rect(upper_left_x, upper_left_y, bounds_width, bounds_height);
     ecs::Entity entity(entity_manager, entity_id);
@@ -201,7 +201,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
         if(collision_id > id) {
           entity.component<Position>() -= dt * entity.component<Velocity>();
           std::cout << "collision resolution: " << id << ", " << collision_id << std::endl;
-        }
+      }
       }
       if(test_entity.has_components<Damage>()) {
         int damage_value = test_entity.component<Damage>().value;

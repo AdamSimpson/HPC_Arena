@@ -11,11 +11,11 @@ public:
   void play();
 
 private:
-  template<typename BuilderType>
-  int new_entity() {
+  template<typename BuilderType, typename... Args>
+  int new_entity(Args... args) {
     int id = entity_manager_.new_entity();
     ecs::Entity ent{entity_manager_, id};
-    BuilderType::build(ent);
+    BuilderType::build(ent, args...);
     return id;
   }
 

@@ -4,6 +4,7 @@
 
 #include "ECS_core/entity.h"
 #include "Entities/player.h"
+#include "Entities/block.h"
 #include "Systems/movement.h"
 #include "Systems/renderer.h"
 #include "Systems/boundary.h"
@@ -13,9 +14,14 @@ GameManager::GameManager(): window_{sf::VideoMode(600,800), "DebugWindow"} {//wi
 
   window_.setVerticalSyncEnabled(true);
 
-  const int player_count = 50;
+  const int player_count = 3;
   for(int i=0; i<player_count; i++) {
-    int player = new_entity<Player>();
+    int player_id = new_entity<Player>(100*i, 0);
+  }
+
+  const int block_count = 7;
+  for(int i=0; i<block_count; i++) {
+    int block_id = new_entity<Block>(500, 100*i + 100);
   }
 
   enable_system<Movement>();
