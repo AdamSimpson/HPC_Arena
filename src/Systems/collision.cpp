@@ -1,4 +1,5 @@
 #include <cmath>
+#include <unordered_set>
 #include "collision.h"
 #include "SFML/Graphics.hpp"
 #include "SFML/System/Vector2.hpp"
@@ -7,6 +8,9 @@
 #include "Components/position.h"
 #include "Components/velocity.h"
 #include "Components/collision_bounds.h"
+#include "Components/collisions.h"
+#include "Components/health.h"
+#include "Components/damage.h"
 
 // @TODO lots of re-use here : should probably store bounding rectangles or something
 // @TODO SFML intersects() is overkill to test if two AABB's have intersected in our case
@@ -97,6 +101,8 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
       grid_[bin_ll_y][bin_ll_x].emplace_back(entity_id);
   });
 
+  std::unordered_set<int> potential_collision_ids;
+
   // Loop over entities that have a velocity component
   // and check for any collisions, mark both collider/collidee with collided component
   // It is assumed here there are no interactions between static(no velocity component) objects
@@ -129,63 +135,81 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
     const int bin_ll_x = bin_ul_x;
     const int bin_ll_y = bin_lr_y;
 
-    // bounding rectangle
-    const sf::IntRect ent_rect(upper_left_x, upper_left_y, bounds_width, bounds_height);
-
-    // Check each bin for entities
+    // Check each corners bin for entities
     // If two dynamic entities collide the convention is that the lowest ID will create the collision entry
     // The higher ID will ignore the collision to ensure no duplicate collision instances
-    for(const int id : grid_[bin_ul_y][bin_ul_x]) {
-      ecs::Entity test_entity(entity_manager, id);
-      const auto test_rect = entity_bounds(test_entity);
-      const bool collided = ent_rect.intersects(test_rect);
-    }
 
+    potential_collision_ids.clear();
+
+    for(const int id : grid_[bin_ul_y][bin_ul_x]) {
+      potential_collision_ids.emplace(id);
+    }
     if(bin_ur_x != bin_ul_x) {
       for(const int id : grid_[bin_ur_y][bin_ur_x]) {
-        ecs::Entity test_entity(entity_manager, id);
-        const auto test_rect = entity_bounds(test_entity);
-        const bool collided = ent_rect.intersects(test_rect);
+        potential_collision_ids.emplace(id);
       }
     }
     if(bin_lr_y != bin_ur_y) {
       for (const int id : grid_[bin_lr_y][bin_lr_x]) {
-        ecs::Entity test_entity(entity_manager, id);
-        const auto test_rect = entity_bounds(test_entity);
-        const bool collided = ent_rect.intersects(test_rect);
+        potential_collision_ids.emplace(id);
       }
     }
     if(bin_ll_y != bin_ul_y) {
       for (const int id : grid_[bin_ll_y][bin_ll_x]) {
-        ecs::Entity test_entity(entity_manager, id);
-        const auto test_rect = entity_bounds(test_entity);
-        const bool collided = ent_rect.intersects(test_rect);
+        potential_collision_ids.emplace(id);
       }
     }
 
+    // Loop over potential collisions
+    // Active(velocity component) entities only register twice (a hit b and b hit a)
+
+    const sf::IntRect ent_rect(upper_left_x, upper_left_y, bounds_width, bounds_height);
+    ecs::Entity entity(entity_manager, entity_id);
+
+    for(int test_id : potential_collision_ids) {
+        // Ignore self collision
+        if(entity_id == test_id)
+          continue;
+
+        ecs::Entity test_entity(entity_manager, test_id);
+        const bool active = test_entity.has_components<Velocity>();
+        const auto test_rect = entity_bounds(test_entity);
+        const bool collided = ent_rect.intersects(test_rect);
+        if(collided) {
+          if(!entity.has_components<Collisions>()) // Add collided component if doesn't exist
+            entity.add_component<Collisions>();
+
+          // Add collision entity id to collided component
+          auto& collision_ids = entity.component<Collisions>().collision_ids;
+          collision_ids.emplace_back(test_id);
+        }
+      }
+
   });
 
-  // Loop over grid and detect collisions, add collided component which holds entity collided with
-  // something something don't duplicate collisions
-/*
-  int collisions =0;
-  for(auto& row : grid_) {
-    for(auto& cell : row) {
-      if(cell.size())
-        collisions+=cell.size();
+  // Apply damage to entities that have collided with entities having health
+  // Or if both entities have health move them apart
+  entity_manager.for_each_with_id<Collisions, Health>([&] (int id, Collisions& collisions, Health& health) {
+    ecs::Entity entity(entity_manager, id);
+
+    // Processes each collision for entity id
+    for(int collision_id : collisions.collision_ids) {
+      ecs::Entity test_entity(entity_manager, collision_id);
+
+      if(test_entity.has_components<Health>()) {
+        // Only respond to each collision pair once
+        if(collision_id > id) {
+          entity.component<Position>() -= dt * entity.component<Velocity>();
+          std::cout << "collision resolution: " << id << ", " << collision_id << std::endl;
+        }
+      }
+      if(test_entity.has_components<Damage>()) {
+        int damage_value = test_entity.component<Damage>().value;
+        entity.component<Health>().current -= damage_value;
+      }
     }
-  }
-  std::cout<<"entities in cells: "<<collisions<<std::endl;
+    // Clear collisions
+    entity.remove_component<Collisions>();
+  });
 
-    // Apply damage to entities that have collided that have health
-    // Or if both entities have health move them apart
-    entity_manager.for_each<Collided, Health>([dt] (Collided& collided, Health& health) {
-
-    });
-
-    // Remove damage causing entities if they've collided with an entity having health
-    entity_manager.for_each<Collided, Damage>([dt] (Collided& collided, Health& health) {
-
-    });
-    */
 };

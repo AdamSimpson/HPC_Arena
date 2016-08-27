@@ -98,6 +98,8 @@ public:
     if( vacant_components_[component_id].size() ) {
       component_index = vacant_components_[component_id].back();
       vacant_components_[component_id].pop_back();
+      // Reset component value
+      components_[component_id][component_index] = std::make_unique<T>();
     }
     else { // Create new component
       // Add new component of type T

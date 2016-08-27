@@ -13,7 +13,7 @@ GameManager::GameManager(): window_{sf::VideoMode(600,800), "DebugWindow"} {//wi
 
   window_.setVerticalSyncEnabled(true);
 
-  const int player_count = 100;
+  const int player_count = 50;
   for(int i=0; i<player_count; i++) {
     int player = new_entity<Player>();
   }

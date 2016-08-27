@@ -5,12 +5,14 @@
 #include "Components/velocity.h"
 #include "Components/sprite.h"
 #include "Components/collision_bounds.h"
+#include "Components/health.h"
 
 void Player::build(ecs::Entity& player) {
   player.add_component<Position>();
   player.add_component<Velocity>();
   player.add_component<Sprite>();
   player.add_component<CollisionBounds>();
+  player.add_component<Health>();
 
   player.component<Sprite>().filename = "resources/tank.jpg";
   player.component<Sprite>().size = sf::Vector2u{100, 60};
