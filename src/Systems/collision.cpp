@@ -13,7 +13,6 @@
 #include "Components/damage.h"
 
 // @TODO lots of re-use here : should probably store bounding rectangles or something
-// @TODO SFML intersects() is overkill to test if two AABB's have intersected in our case
 
 Collision::Collision(sf::Vector2u screen_dims, int spacing) {
   bin_spacing_ = spacing;
@@ -53,7 +52,7 @@ sf::IntRect Collision::entity_bounds(ecs::Entity& entity) {
 sf::IntRect minkowski_difference(sf::IntRect rect_a, sf::IntRect rect_b) {
   // Calculate Minkowski difference
   int MD_left = rect_a.left - (rect_b.left + rect_b.width);
-  int MD_top = rect_a.top - (rect_b.top +rect_b.height);
+  int MD_top = rect_a.top - (rect_b.top + rect_b.height);
   int MD_width = rect_a.width + rect_b.width;
   int MD_height = rect_a.height + rect_b.height;
   sf::IntRect mink_diff(MD_left, MD_top, MD_width, MD_height);
@@ -63,9 +62,7 @@ sf::IntRect minkowski_difference(sf::IntRect rect_a, sf::IntRect rect_b) {
 
 // Determine if two rectangles have collided using
 // Minkowski difference
-bool intersect(sf::IntRect rect_a, sf::IntRect rect_b) {
-  sf::IntRect mink_diff = minkowski_difference(rect_a, rect_b);
-
+bool intersect(sf::IntRect mink_diff) {
   // If Minkowski difference includes origin then the rectangles intersect
   bool collided = mink_diff.left <= 0 &&
                   (mink_diff.left + mink_diff.width >= 0) &&
@@ -73,6 +70,15 @@ bool intersect(sf::IntRect rect_a, sf::IntRect rect_b) {
                   (mink_diff.top + mink_diff.height >= 0);
 
   return collided;
+}
+
+// Determine if two rectangles have collided using
+// Minkowski difference
+bool intersect(sf::IntRect rect_a, sf::IntRect rect_b) {
+  sf::IntRect mink_diff = minkowski_difference(rect_a, rect_b);
+
+  // If Minkowski difference includes origin then the rectangles intersect
+  return intersect(mink_diff);
 }
 
 // Project point which is inside of rect to closest rect edge
@@ -97,6 +103,7 @@ sf::Vector2i project_to_rect_edge(sf::Vector2i point, sf::IntRect rect) {
     min_dist = test_dist;
     projected_point = {point.x, rect_max_y};
   }
+
   // Project top
   test_dist = std::abs(rect.top - point.y);
   if(test_dist < min_dist) {
@@ -228,7 +235,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
         ecs::Entity test_entity(entity_manager, test_id);
         const bool active = test_entity.has_components<Velocity>();
         const auto test_rect = entity_bounds(test_entity);
-        const bool collided = intersect(ent_rect, test_rect); //ent_rect.intersects(test_rect);
+        const bool collided = intersect(ent_rect, test_rect);
         if(collided) {
           if(!entity.has_components<Collisions>()) // Add collided component if doesn't exist
             entity.add_component<Collisions>();
@@ -259,18 +266,25 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
           const auto entity_bounds = entity.component<CollisionBounds>();
           const auto entity_position = entity.component<Position>();
           const int left = (int)entity_position.x + entity_bounds.position_offset.x - entity_bounds.size.x/2;
-          const int top  = (int)entity_position.y + entity_bounds.position_offset.y + entity_bounds.size.y/2;
-          sf::IntRect entity_rect{left, top, entity_bounds.size.x, entity_bounds.size.y};
+          const int top  = (int)entity_position.y + entity_bounds.position_offset.y - entity_bounds.size.y/2;
+          sf::IntRect entity_rect(left, top, entity_bounds.size.x, entity_bounds.size.y);
 
-         // Pull this into a function
+          // Pull this into a function
           const auto test_entity_bounds = test_entity.component<CollisionBounds>();
           const auto test_entity_position = test_entity.component<Position>();
 
           const int test_left = (int)test_entity_position.x + test_entity_bounds.position_offset.x - test_entity_bounds.size.x/2;
-          const int test_top  = (int)test_entity_position.y + test_entity_bounds.position_offset.y + test_entity_bounds.size.y/2;
-          sf::IntRect test_entity_rect{test_left, test_top, test_entity_bounds.size.x, test_entity_bounds.size.y};
+          const int test_top  = (int)test_entity_position.y + test_entity_bounds.position_offset.y - test_entity_bounds.size.y/2;
+          sf::IntRect test_entity_rect(test_left, test_top, test_entity_bounds.size.x, test_entity_bounds.size.y);
 
           const sf::IntRect minkowski_diff = minkowski_difference(test_entity_rect, entity_rect);
+
+          // Check that the entities are still colliding
+          // I don't know if this is required
+          if(!intersect(minkowski_diff))
+            continue;
+
+          // Move colliding body
           const sf::Vector2i penetration = project_to_rect_edge(sf::Vector2i(0,0), minkowski_diff);
           entity.component<Position>().x += penetration.x;
           entity.component<Position>().y += penetration.y;
