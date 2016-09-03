@@ -10,20 +10,20 @@
 #include "Systems/boundary.h"
 #include "Systems/collision.h"
 
-GameManager::GameManager(): window_{sf::VideoMode(600,800), "DebugWindow"} {//window_{sf::VideoMode::getDesktopMode(), "Arena", sf::Style::Fullscreen} {
+GameManager::GameManager(): window_{sf::VideoMode(1200,1800), "DebugWindow"} {//window_{sf::VideoMode::getDesktopMode(), "Arena", sf::Style::Fullscreen} {
 
   window_.setVerticalSyncEnabled(true);
 
   const int player_count = 3;
   for(int i=0; i<player_count; i++) {
-    int player_id = new_entity<Player>(100*i, 0);
+    int player_id = new_entity<Player>(110*i, 100);
   }
 
-  const int block_count = 7;
-  for(int i=0; i<block_count; i++) {
-    int block_id = new_entity<Block>(500, 100*i + 100);
+  for(int j=0; j<3; j++) {
+    for (int i = 0; i < 7; i++) {
+      int block_id = new_entity<Block>(500 + 100*j, 100 * i + 100);
+    }
   }
-
   enable_system<Movement>();
   enable_system<Boundary>(window_.getSize());
   enable_system<Collision>(window_.getSize(), 64); // The bin spacing must be at least equal to the largest sprite dimension

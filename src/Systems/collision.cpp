@@ -50,6 +50,62 @@ sf::IntRect Collision::entity_bounds(ecs::Entity& entity) {
   return sf::IntRect(upper_left_x, upper_left_y, bounds_width, bounds_height);
 }
 
+sf::IntRect minkowski_difference(sf::IntRect rect_a, sf::IntRect rect_b) {
+  // Calculate Minkowski difference
+  int MD_left = rect_a.left - (rect_b.left + rect_b.width);
+  int MD_top = rect_a.top - (rect_b.top +rect_b.height);
+  int MD_width = rect_a.width + rect_b.width;
+  int MD_height = rect_a.height + rect_b.height;
+  sf::IntRect mink_diff(MD_left, MD_top, MD_width, MD_height);
+
+  return mink_diff;
+}
+
+// Determine if two rectangles have collided using
+// Minkowski difference
+bool intersect(sf::IntRect rect_a, sf::IntRect rect_b) {
+  sf::IntRect mink_diff = minkowski_difference(rect_a, rect_b);
+
+  // If Minkowski difference includes origin then the rectangles intersect
+  bool collided = mink_diff.left <= 0 &&
+                  (mink_diff.left + mink_diff.width >= 0) &&
+                  mink_diff.top <= 0 &&
+                  (mink_diff.top + mink_diff.height >= 0);
+
+  return collided;
+}
+
+// Project point which is inside of rect to closest rect edge
+sf::Vector2i project_to_rect_edge(sf::Vector2i point, sf::IntRect rect) {
+  const int rect_max_x = rect.left + rect.width;
+  const int rect_max_y = rect.top  + rect.height;
+
+  // project left side
+  int min_dist = std::abs(point.x - rect.left);
+  sf::Vector2i projected_point{rect.left, point.y};
+
+  // Project right side
+  int test_dist = std::abs(rect_max_x - point.x);
+  if(test_dist < min_dist) {
+    min_dist = test_dist;
+    projected_point = {rect_max_x, point.y};
+  }
+
+  // Project bottom
+  test_dist = std::abs(rect_max_y - point.y);
+  if(test_dist < min_dist) {
+    min_dist = test_dist;
+    projected_point = {point.x, rect_max_y};
+  }
+  // Project top
+  test_dist = std::abs(rect.top - point.y);
+  if(test_dist < min_dist) {
+    projected_point = {point.x, rect.top};
+  }
+
+  return projected_point;
+}
+
 void Collision::update(ecs::EntityManager& entity_manager, float dt) {
   // Reset collision grid
   for(auto& row : grid_) {
@@ -103,8 +159,8 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
 
   std::unordered_set<int> potential_collision_ids;
 
-  // Loop over entities that have a velocity component
-  // and check for any collisions, mark both collider/collidee with collided component
+  // Loop over active entities (those having a velocity component)
+  // and check for any collisions, mark both collider/collidee with collided component if both are active
   // It is assumed here there are no interactions between static(no velocity component) objects
   entity_manager.for_each_with_id<Position, Velocity, CollisionBounds>([&] (int entity_id,
                                                                              Position& position,
@@ -135,9 +191,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
     const int bin_ll_x = bin_ul_x;
     const int bin_ll_y = bin_lr_y;
 
-    // Check each corners bin for entities
-    // If two dynamic entities collide the convention is that the lowest ID will create the collision entry
-    // The higher ID will ignore the collision to ensure no duplicate collision instances
+    // Check each corners bin for possible collision entities
 
     potential_collision_ids.clear();
 
@@ -174,7 +228,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
         ecs::Entity test_entity(entity_manager, test_id);
         const bool active = test_entity.has_components<Velocity>();
         const auto test_rect = entity_bounds(test_entity);
-        const bool collided = ent_rect.intersects(test_rect);
+        const bool collided = intersect(ent_rect, test_rect); //ent_rect.intersects(test_rect);
         if(collided) {
           if(!entity.has_components<Collisions>()) // Add collided component if doesn't exist
             entity.add_component<Collisions>();
@@ -187,9 +241,11 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
 
   });
 
+  // Loop over collisions as seen from active entities
   // Apply damage to entities that have collided with entities having health
   // Or if both entities have health move them apart
-  entity_manager.for_each_with_id<Collisions, Health>([&] (int id, Collisions& collisions, Health& health) {
+  entity_manager.for_each_with_id<Collisions, Health>([&] (int id, Collisions& collisions,
+                                                           Health& health) {
     ecs::Entity entity(entity_manager, id);
 
     // Processes each collision for entity id
@@ -199,9 +255,27 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
       if(test_entity.has_components<Health>()) {
         // Only respond to each collision pair once
         if(collision_id > id) {
-          entity.component<Position>() -= dt * entity.component<Velocity>();
+          // Pull this into a function
+          const auto entity_bounds = entity.component<CollisionBounds>();
+          const auto entity_position = entity.component<Position>();
+          const int left = (int)entity_position.x + entity_bounds.position_offset.x - entity_bounds.size.x/2;
+          const int top  = (int)entity_position.y + entity_bounds.position_offset.y + entity_bounds.size.y/2;
+          sf::IntRect entity_rect{left, top, entity_bounds.size.x, entity_bounds.size.y};
+
+         // Pull this into a function
+          const auto test_entity_bounds = test_entity.component<CollisionBounds>();
+          const auto test_entity_position = test_entity.component<Position>();
+
+          const int test_left = (int)test_entity_position.x + test_entity_bounds.position_offset.x - test_entity_bounds.size.x/2;
+          const int test_top  = (int)test_entity_position.y + test_entity_bounds.position_offset.y + test_entity_bounds.size.y/2;
+          sf::IntRect test_entity_rect{test_left, test_top, test_entity_bounds.size.x, test_entity_bounds.size.y};
+
+          const sf::IntRect minkowski_diff = minkowski_difference(test_entity_rect, entity_rect);
+          const sf::Vector2i penetration = project_to_rect_edge(sf::Vector2i(0,0), minkowski_diff);
+          entity.component<Position>().x += penetration.x;
+          entity.component<Position>().y += penetration.y;
           std::cout << "collision resolution: " << id << ", " << collision_id << std::endl;
-      }
+        }
       }
       if(test_entity.has_components<Damage>()) {
         int damage_value = test_entity.component<Damage>().value;

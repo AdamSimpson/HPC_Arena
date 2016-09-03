@@ -173,7 +173,7 @@ public:
   void for_each_with_id(Body body) {
     for(int id=0; id<(max_entity_id()+1); id++) {
       if( has_components<Components...>(id) ) {
-        std::tuple<int> entity_id(id);
+        std::tuple<int> entity_id{id};
         std::experimental::apply(body,
                                  std::tuple_cat(entity_id, fetch_components<Components...>(id)) );
       }
