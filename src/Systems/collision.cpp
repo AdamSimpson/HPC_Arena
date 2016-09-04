@@ -147,7 +147,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
     const int bin_ur_y = bin_ul_y;
     // Lower right
     const int bin_lr_x = bin_ur_x;
-    const int bin_lr_y = (upper_left_y - bounds_height) / bin_spacing_;
+    const int bin_lr_y = (upper_left_y + bounds_height) / bin_spacing_;
     // Lower left
     const int bin_ll_x = bin_ul_x;
     const int bin_ll_y = bin_lr_y;
@@ -193,7 +193,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
     const int bin_ur_y = bin_ul_y;
     // Lower right
     const int bin_lr_x = bin_ur_x;
-    const int bin_lr_y = (upper_left_y - bounds_height) / bin_spacing_;
+    const int bin_lr_y = (upper_left_y + bounds_height) / bin_spacing_;
     // Lower left
     const int bin_ll_x = bin_ul_x;
     const int bin_ll_y = bin_lr_y;
@@ -202,19 +202,23 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
 
     potential_collision_ids.clear();
 
+    // Top left corner
     for(const int id : grid_[bin_ul_y][bin_ul_x]) {
       potential_collision_ids.emplace(id);
     }
+    // Top right corner
     if(bin_ur_x != bin_ul_x) {
       for(const int id : grid_[bin_ur_y][bin_ur_x]) {
         potential_collision_ids.emplace(id);
       }
     }
+    // Lower right corner
     if(bin_lr_y != bin_ur_y) {
       for (const int id : grid_[bin_lr_y][bin_lr_x]) {
         potential_collision_ids.emplace(id);
       }
     }
+    // Lower left corner
     if(bin_ll_y != bin_ul_y) {
       for (const int id : grid_[bin_ll_y][bin_ll_x]) {
         potential_collision_ids.emplace(id);
@@ -253,6 +257,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
   // Or if both entities have health move them apart
   entity_manager.for_each_with_id<Collisions, Health>([&] (int id, Collisions& collisions,
                                                            Health& health) {
+    std::cout<<"entity: "<<id<<std::endl;
     ecs::Entity entity(entity_manager, id);
 
     // Processes each collision for entity id
@@ -265,16 +270,16 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
           // Pull this into a function
           const auto entity_bounds = entity.component<CollisionBounds>();
           const auto entity_position = entity.component<Position>();
-          const int left = (int)entity_position.x + entity_bounds.position_offset.x - entity_bounds.size.x/2;
-          const int top  = (int)entity_position.y + entity_bounds.position_offset.y - entity_bounds.size.y/2;
+          const int left = (int)entity_position.x  - entity_bounds.size.x/2;
+          const int top  = (int)entity_position.y  - entity_bounds.size.y/2;
           sf::IntRect entity_rect(left, top, entity_bounds.size.x, entity_bounds.size.y);
 
           // Pull this into a function
           const auto test_entity_bounds = test_entity.component<CollisionBounds>();
           const auto test_entity_position = test_entity.component<Position>();
 
-          const int test_left = (int)test_entity_position.x + test_entity_bounds.position_offset.x - test_entity_bounds.size.x/2;
-          const int test_top  = (int)test_entity_position.y + test_entity_bounds.position_offset.y - test_entity_bounds.size.y/2;
+          const int test_left = (int)test_entity_position.x - test_entity_bounds.size.x/2;
+          const int test_top  = (int)test_entity_position.y - test_entity_bounds.size.y/2;
           sf::IntRect test_entity_rect(test_left, test_top, test_entity_bounds.size.x, test_entity_bounds.size.y);
 
           const sf::IntRect minkowski_diff = minkowski_difference(test_entity_rect, entity_rect);
@@ -288,6 +293,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
           const sf::Vector2i penetration = project_to_rect_edge(sf::Vector2i(0,0), minkowski_diff);
           entity.component<Position>().x += penetration.x;
           entity.component<Position>().y += penetration.y;
+
           std::cout << "collision resolution: " << id << ", " << collision_id << std::endl;
         }
       }
