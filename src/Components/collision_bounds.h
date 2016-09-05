@@ -6,5 +6,5 @@
 
 struct CollisionBounds: public ecs::Component<CollisionBounds> {
   sf::Vector2u size;
-  sf::Vector2u position_offset{0,0}; // Offset from entity position to center bounding box around
+//  sf::Vector2u position_offset{0,0}; // Offset from entity position to center bounding box around
 };

@@ -9,6 +9,7 @@
 #include "Systems/renderer.h"
 #include "Systems/boundary.h"
 #include "Systems/collision.h"
+#include "Systems/keyboard.h"
 
 GameManager::GameManager(): window_{sf::VideoMode(1200,1800), "DebugWindow"} {//window_{sf::VideoMode::getDesktopMode(), "Arena", sf::Style::Fullscreen} {
 
@@ -24,10 +25,11 @@ GameManager::GameManager(): window_{sf::VideoMode(1200,1800), "DebugWindow"} {//
       int block_id = new_entity<Block>(500 + 100*j, 100 * i + 100);
     }
   }
-  enable_system<Movement>();
+//  enable_system<Movement>();
   enable_system<Boundary>(window_.getSize());
   enable_system<Collision>(window_.getSize(), 100); // The bin spacing must be at least equal to the largest sprite dimension
   enable_system<Renderer>(window_);
+  enable_system<Keyboard>();
 }
 
 void GameManager::play() {

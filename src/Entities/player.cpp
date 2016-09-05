@@ -23,6 +23,6 @@ void Player::build(ecs::Entity& player,
   player.component<Position>().x = x_center;
   player.component<Position>().y = y_center;
 
-  player.component<Velocity>().x = 10.0;
-  player.component<Velocity>().y = 10.0;
+  player.component<Velocity>().x = 20.0;
+  player.component<Velocity>().y = 0.0;
 }

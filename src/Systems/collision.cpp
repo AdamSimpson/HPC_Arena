@@ -12,7 +12,12 @@
 #include "Components/health.h"
 #include "Components/damage.h"
 
-// @TODO lots of re-use here : should probably store bounding rectangles or something
+// @TODO lots of re-use here...clean up
+// very basic collision system is somewhat robust assuming no diagnoal motion
+// Diagonal motion can cause binding at corners of static objects
+// http://gamedev.stackexchange.com/questions/29036/collision-with-tile-corners-seams-in-2d-platformer
+// Doesn't handle multiple active(having velocity) entities colliding very well as they can penetrate
+
 
 Collision::Collision(sf::Vector2u screen_dims, int spacing) {
   bin_spacing_ = spacing;
@@ -28,7 +33,6 @@ Collision::Collision(sf::Vector2u screen_dims, int spacing) {
   for(auto& row : grid_) {
     row.resize(grid_dim.x);
   }
-
 }
 
 // Return an Rect defining the hitbox for a given entity in offset coordinates
@@ -265,6 +269,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
       ecs::Entity test_entity(entity_manager, collision_id);
 
       if(test_entity.has_components<Health>()) {
+
         // Only respond to each collision pair once
         if(collision_id > id) {
           // Pull this into a function
@@ -285,7 +290,6 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
           const sf::IntRect minkowski_diff = minkowski_difference(test_entity_rect, entity_rect);
 
           // Check that the entities are still colliding
-          // I don't know if this is required
           if(!intersect(minkowski_diff))
             continue;
 
