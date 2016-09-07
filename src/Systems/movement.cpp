@@ -5,6 +5,6 @@
 
 void Movement::update(ecs::EntityManager& entity_manager, float dt) {
   entity_manager.for_each<Position, Velocity>([dt] (Position& position, Velocity& velocity) {
-    position += velocity * dt;
+    position += velocity * (int)dt;
   });
 };

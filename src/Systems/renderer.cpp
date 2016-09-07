@@ -1,5 +1,7 @@
 #include "Components/position.h"
 #include "Components/sprite.h"
+#include "Components/directional_animation.h"
+#include "Components/direction.h"
 #include "ECS_core/entity_manager.h"
 #include "renderer.h"
 #include "Rendering/sprite_renderable.h"
@@ -24,7 +26,47 @@ void Renderer::update(ecs::EntityManager& entity_manager, float dt) {
   using renderable_map_t = std::unordered_map< std::string, std::vector<SpriteRenderable> >;
   std::map< int, renderable_map_t > depth_map;
 
+  // Loop through standard static sprites
   entity_manager.for_each<Position, Sprite>([&] (Position& position, Sprite& sprite) {
+    // Calculate bounding rectangle for sprite
+    const int upper_left_x = position.x - sprite.size.x/2.0;
+    const int upper_left_y = position.y - sprite.size.y/2.0;
+    const sf::FloatRect rectangle(upper_left_x, upper_left_y, sprite.size.x, sprite.size.y);
+
+    //
+    // Fill map
+    //
+
+    // Add new depth renderable_map at given depth if one doesn't exist
+    if(!depth_map.count(sprite.depth_layer))
+      depth_map.emplace(sprite.depth_layer, renderable_map_t{});
+
+    // Add new texture name, at given depth, if one doesn't exist
+    if(!depth_map[sprite.depth_layer].count(sprite.filename))
+      depth_map[sprite.depth_layer].emplace(sprite.filename, std::vector<SpriteRenderable>{});
+
+    // Add new SpriteRenderable
+    depth_map[sprite.depth_layer][sprite.filename].emplace_back(texture_cache_.get(sprite.filename),
+                                                                rectangle);
+  });
+
+  // Loop through directional animations sprites
+  // Handle all animation logic here
+  entity_manager.for_each<Position, Direction, DirectionalAnimation>([&] (Position& position,
+                                                                          Direction& direction,
+                                                                          DirectionalAnimation& dir_animation) {
+    // Extract sprite from directional animation
+    Animation& animation = dir_animation.animations[direction.value];
+    const Sprite& sprite = animation.frames[animation.current_frame];
+
+    // Progress animation
+    animation.current_frame_ticks++;
+    if(animation.current_frame_ticks % animation.ticks_per_frame == 0) {
+      animation.current_frame++;
+      if(animation.current_frame >= animation.frames.size())
+        animation.current_frame = 0;
+    }
+
     // Calculate bounding rectangle for sprite
     const int upper_left_x = position.x - sprite.size.x/2.0;
     const int upper_left_y = position.y - sprite.size.y/2.0;

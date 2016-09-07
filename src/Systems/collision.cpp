@@ -13,11 +13,21 @@
 #include "Components/damage.h"
 
 // @TODO lots of re-use here...clean up
-// very basic collision system is somewhat robust assuming no diagnoal motion
+// very basic collision system is somewhat robust assuming no diagonal motion
 // Diagonal motion can cause binding at corners of static objects
 // http://gamedev.stackexchange.com/questions/29036/collision-with-tile-corners-seams-in-2d-platformer
 // Doesn't handle multiple active(having velocity) entities colliding very well as they can penetrate
+// May need some check on the active entities direction to accoutn for incorrect corner behavior(only check correct sides based on entity velocity)
 
+// Return an integer rectangle given an entities center and bounds
+sf::IntRect bounding_rect(const sf::Vector2i& center, const sf::Vector2u& size) {
+  const int width = size.x;
+  const int height = size.y;
+  const int upper_left_x = center.x - width/2.0;
+  const int upper_left_y = center.y - height/2.0;
+
+  return sf::IntRect(upper_left_x, upper_left_y, width, height);
+}
 
 Collision::Collision(sf::Vector2u screen_dims, int spacing) {
   bin_spacing_ = spacing;
@@ -41,16 +51,11 @@ sf::IntRect Collision::entity_bounds(ecs::Entity& entity) {
   const auto collision_bounds = entity.component<CollisionBounds>();
 
   // Offset position by a bin width so offscreen sprites don't produce negative grid indices
-  const float offset_center_x = position.x + (float)bin_spacing_;
-  const float offset_center_y = position.y + (float)bin_spacing_;
+  const int offset_center_x = static_cast<int>(position.x + (float)bin_spacing_);
+  const int offset_center_y = static_cast<int>(position.y + (float)bin_spacing_);
+  const sf::Vector2i offset_center{offset_center_x, offset_center_y};
 
-  // Calculate corners of collision bounding box
-  const int bounds_width = collision_bounds.size.x;
-  const int bounds_height = collision_bounds.size.y;
-  const int upper_left_x = static_cast<int>(offset_center_x - bounds_width/2.0);
-  const int upper_left_y = static_cast<int>(offset_center_y - bounds_height/2.0);
-
-  return sf::IntRect(upper_left_x, upper_left_y, bounds_width, bounds_height);
+  return bounding_rect(offset_center, collision_bounds.size);
 }
 
 sf::IntRect minkowski_difference(sf::IntRect rect_a, sf::IntRect rect_b) {
@@ -125,7 +130,7 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
     }
   }
 
-  // Place entities in appropriate bins
+  // Place each AABB corner of each entity in appropriate bins
   entity_manager.for_each_with_id<Position, CollisionBounds>([this] (int entity_id,
                                                                     Position& position,
                                                                     CollisionBounds& collision_bounds) {
@@ -272,20 +277,11 @@ void Collision::update(ecs::EntityManager& entity_manager, float dt) {
 
         // Only respond to each collision pair once
         if(collision_id > id) {
-          // Pull this into a function
-          const auto entity_bounds = entity.component<CollisionBounds>();
-          const auto entity_position = entity.component<Position>();
-          const int left = (int)entity_position.x  - entity_bounds.size.x/2;
-          const int top  = (int)entity_position.y  - entity_bounds.size.y/2;
-          sf::IntRect entity_rect(left, top, entity_bounds.size.x, entity_bounds.size.y);
+          const sf::IntRect entity_rect = bounding_rect(entity.component<Position>(),
+                                                        entity.component<CollisionBounds>().size);
 
-          // Pull this into a function
-          const auto test_entity_bounds = test_entity.component<CollisionBounds>();
-          const auto test_entity_position = test_entity.component<Position>();
-
-          const int test_left = (int)test_entity_position.x - test_entity_bounds.size.x/2;
-          const int test_top  = (int)test_entity_position.y - test_entity_bounds.size.y/2;
-          sf::IntRect test_entity_rect(test_left, test_top, test_entity_bounds.size.x, test_entity_bounds.size.y);
+          const sf::IntRect test_entity_rect = bounding_rect(test_entity.component<Position>(),
+                                                             test_entity.component<CollisionBounds>().size);
 
           const sf::IntRect minkowski_diff = minkowski_difference(test_entity_rect, entity_rect);
 
