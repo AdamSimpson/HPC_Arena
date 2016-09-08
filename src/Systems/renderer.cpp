@@ -31,7 +31,9 @@ void Renderer::update(ecs::EntityManager& entity_manager, float dt) {
     // Calculate bounding rectangle for sprite
     const int upper_left_x = position.x - sprite.size.x/2.0;
     const int upper_left_y = position.y - sprite.size.y/2.0;
-    const sf::FloatRect rectangle(upper_left_x, upper_left_y, sprite.size.x, sprite.size.y);
+    const sf::FloatRect screen_rect(upper_left_x, upper_left_y, sprite.size.x, sprite.size.y);
+    const sf::FloatRect texture_rect(sprite.upper_left.x, sprite.upper_left.y, sprite.size.x, sprite.size.y);
+
 
     //
     // Fill map
@@ -47,7 +49,7 @@ void Renderer::update(ecs::EntityManager& entity_manager, float dt) {
 
     // Add new SpriteRenderable
     depth_map[sprite.depth_layer][sprite.filename].emplace_back(texture_cache_.get(sprite.filename),
-                                                                rectangle);
+                                                                texture_rect, screen_rect);
   });
 
   // Loop through directional animations sprites
@@ -67,10 +69,11 @@ void Renderer::update(ecs::EntityManager& entity_manager, float dt) {
         animation.current_frame = 0;
     }
 
-    // Calculate bounding rectangle for sprite
+    // Calculate bounding rectangle for sprite within texture and screen
     const int upper_left_x = position.x - sprite.size.x/2.0;
     const int upper_left_y = position.y - sprite.size.y/2.0;
-    const sf::FloatRect rectangle(upper_left_x, upper_left_y, sprite.size.x, sprite.size.y);
+    const sf::FloatRect screen_rect(upper_left_x, upper_left_y, sprite.size.x, sprite.size.y);
+    const sf::FloatRect texture_rect(sprite.upper_left.x, sprite.upper_left.y, sprite.size.x, sprite.size.y);
 
     //
     // Fill map
@@ -86,7 +89,8 @@ void Renderer::update(ecs::EntityManager& entity_manager, float dt) {
 
     // Add new SpriteRenderable
     depth_map[sprite.depth_layer][sprite.filename].emplace_back(texture_cache_.get(sprite.filename),
-                                                                rectangle);
+                                                                texture_rect,
+                                                                screen_rect);
   });
 
   // Build sprite batches from map

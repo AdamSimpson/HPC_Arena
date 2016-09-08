@@ -22,9 +22,9 @@ void Player::build(ecs::Entity& player,
 
   // Left animation
   Sprite left_sprite;
-  left_sprite.filename = "resources/tank-left.jpg";
+  left_sprite.filename = "resources/tank-directions.jpg";
   left_sprite.upper_left = {0,0};
-  left_sprite.size = {100, 60};
+  left_sprite.size = {102, 62};
 
   Animation left_animation;
   left_animation.ticks_per_frame = 1;
@@ -33,9 +33,9 @@ void Player::build(ecs::Entity& player,
 
   // Right animation
   Sprite right_sprite;
-  right_sprite.filename = "resources/tank-right.jpg";
-  right_sprite.upper_left = {0,0};
-  right_sprite.size = {100, 60};
+  right_sprite.filename = "resources/tank-directions.jpg";
+  right_sprite.upper_left = {102,0};
+  right_sprite.size = {102, 62};
 
   Animation right_animation;
   right_animation.ticks_per_frame = 1;
@@ -44,9 +44,9 @@ void Player::build(ecs::Entity& player,
 
   // Up animation
   Sprite up_sprite;
-  up_sprite.filename = "resources/tank-up.jpg";
-  up_sprite.upper_left = {0,0};
-  up_sprite.size = {100, 60};
+  up_sprite.filename = "resources/tank-directions.jpg";
+  up_sprite.upper_left = {204,0};
+  up_sprite.size = {102, 62};
 
   Animation up_animation;
   up_animation.ticks_per_frame = 1;
@@ -55,9 +55,9 @@ void Player::build(ecs::Entity& player,
 
   // Down animation
   Sprite down_sprite;
-  down_sprite.filename = "resources/tank-down.jpg";
-  down_sprite.upper_left = {0,0};
-  down_sprite.size = {100, 60};
+  down_sprite.filename = "resources/tank-directions.jpg";
+  down_sprite.upper_left = {306,0};
+  down_sprite.size = {102, 62};
 
   Animation down_animation;
   down_animation.ticks_per_frame = 1;

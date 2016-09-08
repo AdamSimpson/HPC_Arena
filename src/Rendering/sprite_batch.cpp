@@ -26,17 +26,17 @@ SpriteBatch::SpriteBatch(const std::vector<SpriteRenderable>& sprite_renderables
     //
 
     // top left
-    quad[0].position = sf::Vector2f(sprite.rectangle.left,
-                                    sprite.rectangle.top);
+    quad[0].position = sf::Vector2f(sprite.screen_rect.left,
+                                    sprite.screen_rect.top);
     // top right
-    quad[1].position = sf::Vector2f(sprite.rectangle.left + sprite.rectangle.width,
-                                    sprite.rectangle.top);
+    quad[1].position = sf::Vector2f(sprite.screen_rect.left + sprite.screen_rect.width,
+                                    sprite.screen_rect.top);
     // bottom right
-    quad[2].position = sf::Vector2f(sprite.rectangle.left + sprite.rectangle.width,
-                                    sprite.rectangle.top + sprite.rectangle.height);
+    quad[2].position = sf::Vector2f(sprite.screen_rect.left + sprite.screen_rect.width,
+                                    sprite.screen_rect.top + sprite.screen_rect.height);
     // bottom left
-    quad[3].position = sf::Vector2f(sprite.rectangle.left,
-                                    sprite.rectangle.top + sprite.rectangle.height);
+    quad[3].position = sf::Vector2f(sprite.screen_rect.left,
+                                    sprite.screen_rect.top + sprite.screen_rect.height);
 
     //
     // set quad texture coordinates(in pixel units, not normalized)
@@ -44,13 +44,15 @@ SpriteBatch::SpriteBatch(const std::vector<SpriteRenderable>& sprite_renderables
     //
 
     // top left
-    quad[0].texCoords = sf::Vector2f(0.0f, 0.0f);
+    quad[0].texCoords = sf::Vector2f(sprite.texture_rect.left, sprite.texture_rect.top);
     // top right
-    quad[1].texCoords = sf::Vector2f(texture_.getSize().x, 0.0f);
+    quad[1].texCoords = sf::Vector2f(sprite.texture_rect.left + sprite.texture_rect.width, sprite.texture_rect.top);
     // bottom right
-    quad[2].texCoords = sf::Vector2f(texture_.getSize().x, texture_.getSize().y);
+    quad[2].texCoords = sf::Vector2f(sprite.texture_rect.left + sprite.texture_rect.width,
+                                     sprite.texture_rect.top + sprite.texture_rect.height);
     // bottom left
-    quad[3].texCoords = sf::Vector2f(0.0f, texture_.getSize().y);
+    quad[3].texCoords = sf::Vector2f(sprite.texture_rect.left,
+                                     sprite.texture_rect.top + sprite.texture_rect.height);
   }
 }
 
