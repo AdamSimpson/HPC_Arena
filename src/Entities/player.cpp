@@ -22,7 +22,7 @@ void Player::build(ecs::Entity& player,
 
   // Left animation
   Sprite left_sprite;
-  left_sprite.filename = "resources/tank.jpg";
+  left_sprite.filename = "resources/tank-left.jpg";
   left_sprite.upper_left = {0,0};
   left_sprite.size = {100, 60};
 
@@ -33,7 +33,7 @@ void Player::build(ecs::Entity& player,
 
   // Right animation
   Sprite right_sprite;
-  right_sprite.filename = "resources/tank.jpg";
+  right_sprite.filename = "resources/tank-right.jpg";
   right_sprite.upper_left = {0,0};
   right_sprite.size = {100, 60};
 
@@ -44,7 +44,7 @@ void Player::build(ecs::Entity& player,
 
   // Up animation
   Sprite up_sprite;
-  up_sprite.filename = "resources/tank.jpg";
+  up_sprite.filename = "resources/tank-up.jpg";
   up_sprite.upper_left = {0,0};
   up_sprite.size = {100, 60};
 
@@ -55,14 +55,14 @@ void Player::build(ecs::Entity& player,
 
   // Down animation
   Sprite down_sprite;
-  down_sprite.filename = "resources/tank.jpg";
+  down_sprite.filename = "resources/tank-down.jpg";
   down_sprite.upper_left = {0,0};
   down_sprite.size = {100, 60};
 
   Animation down_animation;
   down_animation.ticks_per_frame = 1;
   down_animation.current_frame = 0;
-  down_animation.frames.push_back(up_sprite);
+  down_animation.frames.push_back(down_sprite);
 
   player.component<DirectionalAnimation>().animations[Orientation ::left] = left_animation;
   player.component<DirectionalAnimation>().animations[Orientation ::right] = right_animation;
