@@ -17,6 +17,7 @@ void Player::build(ecs::Entity& player,
   player.add_component<Health>();
   player.add_component<Direction>();
   player.add_component<DirectionalAnimation>();
+  player.add_component<Sprite>();
 
   player.component<Direction>().value = left;
 
@@ -69,7 +70,7 @@ void Player::build(ecs::Entity& player,
   player.component<DirectionalAnimation>().animations[Orientation ::up] = up_animation;
   player.component<DirectionalAnimation>().animations[Orientation ::down] = down_animation;
 
-  player.component<CollisionBounds>().size = {100, 60};
+  player.component<CollisionBounds>().size = {102, 62};
 
   player.component<Position>().x = x_center;
   player.component<Position>().y = y_center;

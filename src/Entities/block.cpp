@@ -14,7 +14,7 @@ void Block::build(ecs::Entity& block,
   block.add_component<Health>();
 
   block.component<Sprite>().filename = "resources/block.jpg";
-  block.component<Sprite>().size = sf::Vector2u{100, 100};
+  block.component<Sprite>().size = sf::Vector2u{102, 102};
 
   block.component<CollisionBounds>().size = block.component<Sprite>().size;
 

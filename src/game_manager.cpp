@@ -1,10 +1,12 @@
 #include "game_manager.h"
 #include <SFML/Window.hpp>
 #include <iostream>
+#include <Components/directional_animation.h>
 
 #include "ECS_core/entity.h"
 #include "Entities/player.h"
 #include "Entities/block.h"
+#include "Systems/animator.h"
 #include "Systems/movement.h"
 #include "Systems/renderer.h"
 #include "Systems/boundary.h"
@@ -28,6 +30,7 @@ GameManager::GameManager(): window_{sf::VideoMode(1200,1800), "DebugWindow"} {//
 //  enable_system<Movement>();
   enable_system<Boundary>(window_.getSize());
   enable_system<Collision>(window_.getSize(), 100); // The bin spacing must be at least equal to the largest sprite dimension
+  enable_system<Animator>();
   enable_system<Renderer>(window_);
   enable_system<Keyboard>();
 }
