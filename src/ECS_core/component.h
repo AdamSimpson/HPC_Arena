@@ -4,7 +4,7 @@
 
 namespace ecs {
 
-// Total count of of unique Component<T>'s instanciated
+// Total count of of unique Component<T>'s instantiated
 extern int g_component_type_count;
 
 // Use CRTP method to keep track of each unique component types ID
@@ -13,7 +13,7 @@ class Component : public ComponentBase {
 public:
 
   // If an instance of Component<T> hasn't been created we give
-  // it the next available ID and incriment the global Component<T> type count
+  // it the next available ID and increment the global Component<T> type count
   // Return the type_id associated with this component type
   // int type_id = Component<MyType>::type_id()
   // If type_id not created create it

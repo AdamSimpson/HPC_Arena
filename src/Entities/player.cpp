@@ -7,6 +7,7 @@
 #include "Components/collision_bounds.h"
 #include "Components/health.h"
 #include "Components/direction.h"
+#include "Components/animation.h"
 #include "Components/directional_animation.h"
 
 void Player::build(ecs::Entity& player,
@@ -16,7 +17,9 @@ void Player::build(ecs::Entity& player,
   player.add_component<CollisionBounds>();
   player.add_component<Health>();
   player.add_component<Direction>();
+  // These are required to be coupled
   player.add_component<DirectionalAnimation>();
+  player.add_component<Animation>();
   player.add_component<Sprite>();
 
   player.component<Direction>().value = left;
